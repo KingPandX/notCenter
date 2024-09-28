@@ -7,6 +7,9 @@ local gears = require("gears")
 local network = require("widget.network")
 local brightness = require("widget.brightness-slider")
 local volume = require("widget.volume-slider")
+local userProfile = require("widget.user-profile")
+local weather = require("widget.weather")
+local calendar = require("widget.calendar")
 
 local bg_color = "#ffffff0a"
 local active_color = "#ffffff73"
@@ -14,8 +17,8 @@ local icon_size = 32  -- Define el tamaño del icono
 
 -- Crear un layout vertical
 local main_layout = wibox.layout.fixed.vertical()
-local Mainnotification_layout = wibox.layout.fixed.vertical()
-local control_layout = wibox.layout.fixed.horizontal()
+local Mainnotification_layout = wibox.layout.fixed.horizontal()
+local control_layout = wibox.layout.fixed.vertical()
 control_layout.visible = false
 
 -- Crear una caja para el layout de notificaciones
@@ -25,6 +28,7 @@ local notification_box = wibox {
     ontop = true,
     visible = false,
     bg = "#000000aa",
+    shape = gears.shape.rounded_rect,  -- Añadir bordes redondeados
     widget = main_layout
 }
 
@@ -246,10 +250,24 @@ slider_layout:add(brightness)
 control_layout:add(test)
 control_layout:add(slider_layout)
 
+
 main_layout:add(centered_button_panel)
 main_layout:add(Mainnotification_layout)
 main_layout:add(control_layout)
 
-Mainnotification_layout:add(centered_clear_button)
+
 local notification_container = wibox.container.margin(notification_layout, 10, 10, 10, 10)
-Mainnotification_layout:add(notification_container)
+local notZone = wibox.layout.fixed.vertical()
+local dataZone = wibox.layout.fixed.vertical()
+dataZone.forced_width = 200
+dataZone.spacing = 10
+notZone.forced_width = 200
+
+dataZone:add(userProfile)
+dataZone:add(weather)
+dataZone:add(calendar)
+notZone:add(centered_clear_button)
+notZone:add(notification_container)
+
+Mainnotification_layout:add(dataZone)
+Mainnotification_layout:add(notZone)
