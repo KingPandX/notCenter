@@ -3,11 +3,20 @@ local wibox = require("wibox")
 local naughty = require("naughty")
 local gears = require("gears")
 
+-- Importar el widgets
+local network = require("widget.network")
+local brightness = require("widget.brightness-slider")
+local volume = require("widget.volume-slider")
+
 local bg_color = "#ffffff0a"
+local active_color = "#ffffff73"
 local icon_size = 32  -- Define el tamaño del icono
 
 -- Crear un layout vertical
 local main_layout = wibox.layout.fixed.vertical()
+local Mainnotification_layout = wibox.layout.fixed.vertical()
+local control_layout = wibox.layout.fixed.horizontal()
+control_layout.visible = false
 
 -- Crear una caja para el layout de notificaciones
 local notification_box = wibox {
@@ -27,6 +36,80 @@ awful.placement.center_horizontal(notification_box, { parent = awful.screen.focu
 awesome.connect_signal("toggle_notification_box", function()
     notification_box.visible = not notification_box.visible
 end)
+
+local is_notification_mode = true
+
+local notification_button = wibox.widget {
+    {
+        text = "Notification",
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox
+    },
+    widget = wibox.container.background,
+    bg = is_notification_mode and active_color or bg_color,  -- Cambiar el color de fondo basado en is_notification_mode
+    shape = function(cr, width, height)
+        gears.shape.partially_rounded_rect(cr, width, height, true, false, false, true, 5)
+    end,
+    margins = 10,
+    forced_width = 75,  -- Aumentar el tamaño del fondo
+    forced_height = 25,  -- Aumentar el tamaño del fondo
+    buttons = gears.table.join(
+        awful.button({}, 1, function()
+            awesome.emit_signal("set_mode", true)
+        end)
+    )
+}
+
+local control_button = wibox.widget {
+    {
+        text = "Control",
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox
+    },
+    widget = wibox.container.background,
+    bg = is_notification_mode and bg_color or active_color,  -- Cambiar el color de fondo basado en is_notification_mode
+    shape = function(cr, width, height)
+        gears.shape.partially_rounded_rect(cr, width, height, false, true, true, false, 5)
+    end,
+    margins = 10,
+    forced_width = 75,  -- Aumentar el tamaño del fondo
+    forced_height = 25,  -- Aumentar el tamaño del fondo
+    buttons = gears.table.join(
+        awful.button({}, 1, function()
+            awesome.emit_signal("set_mode", false)
+        end)
+    )
+}
+
+awesome.connect_signal("set_mode", function(mode)
+    is_notification_mode = mode
+    notification_button.bg = is_notification_mode and active_color or bg_color
+    control_button.bg = is_notification_mode and bg_color or active_color
+    Mainnotification_layout.visible = is_notification_mode
+    control_layout.visible = not is_notification_mode
+end)
+
+local button_panel = wibox.widget {
+    {
+        notification_button,
+        control_button,
+        layout = wibox.layout.fixed.horizontal,
+        spacing = 0
+    },
+    margins = 10,
+    widget = wibox.container.margin
+}
+
+-- Centrar el button_panel
+local centered_button_panel = wibox.widget {
+    nil,
+    button_panel,
+    nil,
+    expand = "none",
+    layout = wibox.layout.align.horizontal
+}
 
 local notification_layout = wibox.layout.fixed.vertical()
 
@@ -144,6 +227,29 @@ local centered_clear_button = wibox.widget {
     expand = "none",
     layout = wibox.layout.align.horizontal
 }
-main_layout:add(centered_clear_button)
+
+-- Cosas del control_layout
+
+local test = wibox.widget {
+    {
+        widget = network
+    },
+    forced_width = 100,
+    forced_height = 100,
+    widget = wibox.container.margin
+}
+
+local slider_layout = wibox.layout.fixed.vertical()
+slider_layout:add(volume)
+slider_layout:add(brightness)
+
+control_layout:add(test)
+control_layout:add(slider_layout)
+
+main_layout:add(centered_button_panel)
+main_layout:add(Mainnotification_layout)
+main_layout:add(control_layout)
+
+Mainnotification_layout:add(centered_clear_button)
 local notification_container = wibox.container.margin(notification_layout, 10, 10, 10, 10)
-main_layout:add(notification_container)
+Mainnotification_layout:add(notification_container)
