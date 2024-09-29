@@ -13,14 +13,14 @@ return {
 
 		weather = {
 			-- API Key
-			key = "3a396d9705f6488cc8943d29eb7d2f5c",
+			key = "",
 			-- City ID
-			lat = "10.254212087352967",
+			lat = "",
 			-- Units
-			lon = "-66.69594607673426",
+			lon = "",
 			-- Update in N seconds
 			update_interval = 1200,
-			units = "metric"
+			units = "metric",
 		},
 
 		network = {
