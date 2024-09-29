@@ -4,10 +4,17 @@ local naughty = require("naughty")
 local gears = require("gears")
 
 -- Importar el widgets
-local network = require("widget.network")
+local airplanemode = require("widget.airplane-mode")
+local blue_light = require("widget.blue-light")
+local poweroff = require("widget.end-session")
+local cpu = require("widget.cpu-meter.init")
+local ram = require("widget.ram-meter.init")
+local temp = require("widget.temperature-meter")
 local brightness = require("widget.brightness-slider")
 local volume = require("widget.volume-slider")
-local userProfile = require("widget.user-profile")
+
+
+local news = require("notCenter.news")
 local weather = require("widget.weather")
 local calendar = require("widget.calendar")
 
@@ -23,8 +30,8 @@ control_layout.visible = false
 
 -- Crear una caja para el layout de notificaciones
 local notification_box = wibox {
-    width = 400,
-    height = 600,
+    width = 900,
+    height = 700,
     ontop = true,
     visible = false,
     bg = "#000000aa",
@@ -172,8 +179,8 @@ local function create_notification(icon, title, message)
         widget = wibox.container.margin
     }
     notification:get_children_by_id("icon_role")[1].image = icon
-    notification:get_children_by_id("title_role")[1].text = title
-    notification:get_children_by_id("message_role")[1].text = message
+    notification:get_children_by_id("title_role")[1].markup = title
+    notification:get_children_by_id("message_role")[1].markup = message
 
     notification:buttons(gears.table.join(
         awful.button({}, 1, function()
@@ -234,22 +241,75 @@ local centered_clear_button = wibox.widget {
 
 -- Cosas del control_layout
 
-local test = wibox.widget {
+control_layout.spacing = 10
+
+local firstBlock = wibox.layout.fixed.horizontal()
+
+firstBlock.spacing = 10
+
+local togglesBox = wibox.layout.fixed.vertical()
+
+local togglesBG = wibox.widget {
     {
-        widget = network
+        togglesBox,
+        widget = wibox.container.margin,
+        margins = 10
     },
-    forced_width = 100,
-    forced_height = 100,
-    widget = wibox.container.margin
+    widget = wibox.container.background,
+    bg = bg_color,
+    shape = gears.shape.rounded_rect
 }
 
+togglesBox.spacing = 10
+togglesBox:add(airplanemode)
+togglesBox:add(blue_light)
+
 local slider_layout = wibox.layout.fixed.vertical()
+
+local sliderBG = wibox.widget {
+    {
+        slider_layout,
+        widget = wibox.container.margin,
+        margins = 10
+    },
+    widget = wibox.container.background,
+    bg = bg_color,
+    shape = gears.shape.rounded_rect
+}
+
 slider_layout:add(volume)
 slider_layout:add(brightness)
 
-control_layout:add(test)
-control_layout:add(slider_layout)
+firstBlock:add(togglesBG)
+firstBlock:add(sliderBG)
 
+local secondBlock = wibox.layout.fixed.vertical()
+secondBlock:add(cpu)
+secondBlock:add(ram)
+secondBlock:add(temp)
+
+local secondBlockBG = wibox.widget {
+    {
+        secondBlock,
+        widget = wibox.container.margin,
+        margins = 10
+    },
+    widget = wibox.container.background,
+    bg = bg_color,
+    shape = gears.shape.rounded_rect
+}
+
+local centermargin = wibox.widget {
+    {
+        firstBlock,
+        secondBlockBG,
+        layout = wibox.layout.fixed.vertical,
+        spacing = 10
+    },
+    widget = wibox.container.margin,
+    margins = 10
+}
+control_layout:add(centermargin)
 
 main_layout:add(centered_button_panel)
 main_layout:add(Mainnotification_layout)
@@ -259,13 +319,61 @@ main_layout:add(control_layout)
 local notification_container = wibox.container.margin(notification_layout, 10, 10, 10, 10)
 local notZone = wibox.layout.fixed.vertical()
 local dataZone = wibox.layout.fixed.vertical()
-dataZone.forced_width = 200
-dataZone.spacing = 10
-notZone.forced_width = 200
 
-dataZone:add(userProfile)
-dataZone:add(weather)
-dataZone:add(calendar)
+local center_calendar = wibox.widget {
+    nil,
+    {
+        calendar,
+        widget = wibox.container.margin,
+        margins = 10
+    },
+    nil,
+    expand = "none",
+    layout = wibox.layout.align.horizontal
+}
+
+local center_news = wibox.widget {
+    nil,
+    {
+        {
+            news,
+            widget = wibox.container.margin,
+            margins = 10
+        },
+        widget = wibox.container.background,
+        bg = bg_color,
+        shape = gears.shape.rounded_rect
+    },
+    nil,
+    expand = "none",
+    layout = wibox.layout.align.horizontal
+}
+
+local center_weather = wibox.widget {
+    nil,
+    {
+        weather,
+        widget = wibox.container.margin,
+    },
+    nil,
+    expand = "none",
+    layout = wibox.layout.align.horizontal
+}
+
+
+dataZone.forced_width = 370
+dataZone.spacing = 10
+notZone.forced_width = 530
+
+local dataWidth = 320
+
+news.forced_width = dataWidth
+weather.forced_width = dataWidth
+calendar.forced_width = dataWidth
+
+dataZone:add(center_news)
+dataZone:add(center_weather)
+dataZone:add(center_calendar)
 notZone:add(centered_clear_button)
 notZone:add(notification_container)
 
